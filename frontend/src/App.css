@@ -15,14 +15,14 @@ body {
 }
 
 #root {
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .app {
 
     max-width: 1000px;
 
-    height: 100vh;
+    min-height: 100vh;
 
     margin: auto;
 

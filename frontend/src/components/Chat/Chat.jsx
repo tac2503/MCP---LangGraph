@@ -14,6 +14,12 @@ function Chat() {
 
     const [loading, setLoading] = useState(false);
 
+    const createMessage = (role, content) => ({
+        id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+        role,
+        content,
+    });
+
     
 
     const handleSend = async () => {
@@ -24,10 +30,7 @@ function Chat() {
 
         setMessages(prev => [
             ...prev,
-            {
-                role: "user",
-                content: userMessage
-            }
+            createMessage("user", userMessage)
         ]);
 
         setInput("");
@@ -43,10 +46,7 @@ function Chat() {
 
             setMessages(prev => [
                 ...prev,
-                {
-                    role: "assistant",
-                    content: response.response
-                }
+                createMessage("assistant", response.response ?? "No se recibió respuesta del servidor.")
             ]);
 
         } catch (error) {
@@ -55,10 +55,7 @@ function Chat() {
 
             setMessages(prev => [
                 ...prev,
-                {
-                    role: "assistant",
-                    content: "Error conectando con el servidor."
-                }
+                createMessage("assistant", "Error conectando con el servidor.")
             ]);
 
         } finally {
@@ -74,7 +71,7 @@ function Chat() {
 
                 {messages.map((msg, index) => (
                     <Message
-                        key={index}
+                        key={msg.id}
                         role={msg.role}
                         content={msg.content}
                     />

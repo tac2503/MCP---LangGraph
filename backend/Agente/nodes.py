@@ -21,7 +21,7 @@ def detect_tool(state):
                     Mensaje del usuario:
                     {user_message}
                     
-                    Responed SOLO con el nombre de la tool.
+                    Responed SOLO con el nombre de la tool. Nada de cosas raras SOLO el nombre de la tool.
                     Si no aplica ninguna, responde: ninguna
                     
                     Si el mensaje de consultar no especifica si es por cedula o por email, será buscar por cedula.
@@ -30,12 +30,53 @@ def detect_tool(state):
                     entonces la tool será : ninguna
                     """)
     ])
-    
-    tool_name = response.content.strip()
+    content = response.content
+    if isinstance(content, str):
+        tool_name=content.strip()
+    elif isinstance(content,list):
+        tool_name="".join(
+            part.get("text","") if isinstance(part,dict) else str(part)
+            for part in content
+        ).strip()
+    else:
+        tool_name=str(content).strip()
+        
+    args={}
+    if tool_name !="ninguna":
+        tool = tools_by_name[tool_name]
+        schema = tool.args_schema
+        extract = model.invoke([
+            HumanMessage(
+                content=f"""
+                    Extrae los parámetros del mensaje.
+                    
+                    Mensaje:
+                    {user_message}
+                    Schema:
+                    {schema}
+                    Responde SOLO un diccionario python.
+                    
+                    Ejemplos:
+                    
+                    mensaje:
+                    consulta usuario con cedula 12345.
+                    respuesta:
+                    {{"cedula":"12345"}}
+                    mensaje:
+                    consulta usuario con email test@test.com
+                    respuesta:
+                    {{"email":"test@test.com"}}
+                """
+            )
+        ])
+        try: 
+            args=eval(extract.content)
+        except:
+            args={}
     
     return{
         "selected_tool":tool_name,
-        "tool_args":{},
+        "tool_args":args,
         "missing_fields":[],
         "pending_field":None
     }
