@@ -1,27 +1,56 @@
 # main.py
 
-from fastapi import FastAPI
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from langchain_core.messages import HumanMessage
 from backend.Agente.graph import build_graph
+from backend.Pinecone.pinecone import save_message
 
-app = FastAPI()
+router = APIRouter(
+    prefix="/chat",
+    tags=["chat"],
+)
 
-graph = build_graph()
+graph = None
 
 
 class ChatRequest(BaseModel):
+    session_id:str
     message: str
 
 
-@app.post("/chat")
-def chat(request: ChatRequest):
 
-    result = graph.invoke({
+@router.post("")
+async def chat(request: ChatRequest):
+    global graph
+
+    if graph is None:
+        graph = await build_graph()
+    config = {
+        "configurable":{
+            "thread_id":request.session_id
+        }
+    }
+
+    result = await graph.ainvoke({
         "messages": [
             HumanMessage(content=request.message)
         ]
-    })
-
-    return result
+    },config=config)
+    last_message = result["messages"][-1]
+    response=(
+        last_message.content
+        if hasattr(last_message, "content") else str(last_message)
+    )
+    try:
+        save_message(
+            session_id="test",
+            user=request.message,
+            bot=response
+        )
+    except Exception as e:
+        print(f"Error saving message: {e}")
+    return {
+        "response": response
+    }

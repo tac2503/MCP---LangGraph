@@ -37,3 +37,12 @@ Asistente: {bot}
     )
 
     vectorstore.add_documents([doc])
+    
+def search_memory(query:str, session_id:str):
+    
+    docs = vectorstore.similarity_search(
+        query,
+        k=5,
+        filter={"session_id": session_id}
+    )
+    return docs

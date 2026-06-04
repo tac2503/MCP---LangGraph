@@ -1,6 +1,6 @@
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from backend.mcp_server.model import get_model
-
+from backend.Pinecone.pinecone import search_memory
 tools_by_name={}
 
 def detect_tool(state):
@@ -10,7 +10,7 @@ def detect_tool(state):
     model = get_model()
     
     user_message = state["messages"][-1].content
-    memory = state.get("memory_summary","")
+    
     
     response = model.invoke([
         HumanMessage(content=f"""
@@ -90,6 +90,10 @@ def update_args(state):
 def chat_natural(state):
     model = get_model()
     memory = state.get("messages",[])
+    long_memory = search_memory(state["messages"][-1].content,"test")
+    long_memory = "\n".join(
+        [doc.page_content for doc in long_memory]
+    )
     system_prompt = SystemMessage(
         content =(f"""
                 Eres un asistente con memoria de conversación y tu función principal es ayudar a crear y consultar usuarios
@@ -104,6 +108,11 @@ def chat_natural(state):
                 Regla importante:
                 -Si el usuario hace consultas relacionadas con acciones hechas anteriormente,
                 revisa el contexto y responde correctamente de acuerdo a eso.
+                - Ahora, si el usuario hace consulas relacionadas con acciones hechas anteriormente o en otras ejecuciones(ejemplo: necesito saber todos los usuarios consultados/regisrtados en todas las sesiones), pero no hay esa información en el contexto,
+                entonces vas a responder usando este contexto que abarca todo lo que has realizado hasta ahora:
+                {long_memory}
+                
+                Nota: También puedes responder analizando los dos contextos y completando lo que creas que falte con la información del contexto largo.
                 
                 
                 

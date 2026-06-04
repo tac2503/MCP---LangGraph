@@ -12,7 +12,8 @@ async def tool_node(state):
         El resultado de la herramienta {state["selected_tool"]} es:
         {result}
         
-        Necesito que acoples esa respuesta y la acoples a lenguaje natural y amigable para el usuario
+        Necesito que acoples esa respuesta y la acoples a lenguaje natural y amigable para el usuario. Sin decir nada como "aqui tienes una respuesta mas amigable"
+        Simplemente dame la respuesta final en lenguaje natural, sin mencionar que es una respuesta procesada o algo por el estilo. Solo dame la respuesta final, nada mas.
         
         """
             

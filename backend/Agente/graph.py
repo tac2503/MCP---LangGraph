@@ -64,58 +64,58 @@ async def build_graph():
     builder.add_edge("chat", END)
 
     return builder.compile(checkpointer=memory)
-async def main():
+# async def main():
 
-    graph = await build_graph()
+#     graph = await build_graph()
 
-    state = {
-        "messages": [],
-        "selected_tool": None,
-        "tool_args": {},
-        "missing_fields": [],
-        "pending_field": None
-    }
+#     state = {
+#         "messages": [],
+#         "selected_tool": None,
+#         "tool_args": {},
+#         "missing_fields": [],
+#         "pending_field": None
+#     }
     
-    config={
-        "configurable":{
-            "thread_id":"test"
-        }
-    }
+#     config={
+#         "configurable":{
+#             "thread_id":"test"
+#         }
+#     }
 
-    print("\n Chat iniciado (escribe 'exit' para salir)\n")
+#     print("\n Chat iniciado (escribe 'exit' para salir)\n")
 
-    while True:
+#     while True:
 
-        print("Usuario: ", end="", flush=True)
-        user_input = await asyncio.to_thread(input)
+#         print("Usuario: ", end="", flush=True)
+#         user_input = await asyncio.to_thread(input)
 
-        if user_input.lower() in ["exit", "quit"]:
-            break
-
-        
-        state["messages"].append(
-            HumanMessage(content=user_input)
-        )
-
-        state = await graph.ainvoke(state,config=config)
+#         if user_input.lower() in ["exit", "quit"]:
+#             break
 
         
-        last_msg = state["messages"][-1]
-        bot_output = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
-        if hasattr(last_msg, "content"):
-            print("\nBot:", last_msg.content)
-        else:
-            print("\nBot:", last_msg)
+#         state["messages"].append(
+#             HumanMessage(content=user_input)
+#         )
+
+#         state = await graph.ainvoke(state,config=config)
+
+        
+#         last_msg = state["messages"][-1]
+#         bot_output = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
+#         if hasattr(last_msg, "content"):
+#             print("\nBot:", last_msg.content)
+#         else:
+#             print("\nBot:", last_msg)
             
-        save_message(
-            session_id="test",
-            user=user_input,
-            bot=bot_output
-        )
+#         save_message(
+#             session_id="test",
+#             user=user_input,
+#             bot=bot_output
+#         )
 
 
-# -----------------------------
-# ENTRY POINT
-# -----------------------------
-if __name__ == "__main__":
-    asyncio.run(main())
+# # -----------------------------
+# # ENTRY POINT
+# # -----------------------------
+# if __name__ == "__main__":
+#     asyncio.run(main())

@@ -33,7 +33,7 @@ def create_user(usuario:usuarioCreate, db:Session = Depends(get_db)):
         "celular": new_user.celular
     }
 
-@router.get("/get_by_cedula/{cedula}", response_model=usuarioResponse)
+@router.get("/get_by_cedula/{cedula}")
 def get_user_by_cedula(cedula:str, db:Session = Depends(get_db)):
     """Obtiene un usuario por cédula"""
     usuario = db.query(Usuario).filter(Usuario.cedula ==cedula).first()
@@ -46,7 +46,7 @@ def get_user_by_cedula(cedula:str, db:Session = Depends(get_db)):
         "email": usuario.email,
         "celular": usuario.celular
     }
-@router.get("/get_by_email/{email}", response_model=usuarioResponse)
+@router.get("/get_by_email/{email}")
 def get_user_by_email(email:str, db:Session = Depends(get_db)):
     """Obtiene un usuario por email"""
     usuario = db.query(Usuario).filter(Usuario.email == email).first()
