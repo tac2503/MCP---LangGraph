@@ -5,9 +5,9 @@ import operator
 class MessagesState(TypedDict):
     messages: Annotated[list[AnyMessage], operator.add]
     
-    intent:str | None
-    pending_field:str | None
-    nombre:str | None
-    cedula:str | None
-    email:str | None
-    celular:str | None
+    selected_tool : str | None
+    tool_args: dict | None
+    missing_fields: list[str] | None
+    pending_field: str | None
+    
+        

@@ -1,33 +1,32 @@
-from langchain_core.messages import ToolMessage
-from backend.mcp_server.tools import tools_by_name
+from langchain_core.messages import ToolMessage, HumanMessage
+from backend.Agente.nodes import tools_by_name
+from backend.mcp_server.model import get_model
 
-def tool_node(state):
 
-    results = []
-
-    last_message = state["messages"][-1]
-
-    for tool_call in last_message.tool_calls:
-
-        tool = tools_by_name[tool_call["name"]]
-
-        result = tool.invoke(
-            tool_call["args"]
+async def tool_node(state):
+    model = get_model()
+    tool = tools_by_name[state["selected_tool"]]
+    result = await tool.ainvoke(state["tool_args"])
+    natural_result = model.invoke([
+        HumanMessage(content=f"""
+        El resultado de la herramienta {state["selected_tool"]} es:
+        {result}
+        
+        Necesito que acoples esa respuesta y la acoples a lenguaje natural y amigable para el usuario
+        
+        """
+            
         )
-
-        results.append(
-            ToolMessage(
-                content=str(result),
-                tool_call_id=tool_call["id"]
-            )
-        )
-
+    ])
     return {
-        "messages": results,
-        "intent": None,
+        "messages":[
+            ToolMessage(
+                content=str(natural_result.content),
+                tool_call_id="final"
+            )
+        ],
+        "selected_tool": None,
+        "tool_args": {},
+        "missing_fields": [],
         "pending_field": None,
-        "nombre": None,
-        "cedula": None,
-        "email": None,
-        "celular": None
     }

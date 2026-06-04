@@ -1,78 +1,121 @@
+from backend.Pinecone.pinecone import save_message
 from langgraph.graph import StateGraph, END
 from backend.Agente.state import MessagesState
+from langgraph.checkpoint.memory import MemorySaver
+import asyncio
+from langchain_core.messages import HumanMessage
 from backend.Agente.nodes import(
-    detect_intent,
-    collect_missing_data,
-    update_user_data,
-    shoul_call_tool
+    tools_by_name,
+    detect_tool,
+    validate,
+    update_args,
+    chat_natural
 )
 from backend.Agente.tool import tool_node
-from backend.Agente.call_tool import call_llm
+from backend.mcp_server.model2 import get_tools_client
 
-def route_after_collect(state):
-    if shoul_call_tool(state):
-        return "llm"
-    return END
+memory = MemorySaver()
+def should_call_tool(state):
+    return len(state.get("missing_fields",[])) == 0
 
-def build_graph():
+def route(state):
+    
+    if state.get("selected_tool") in [None,"","ninguna"]:
+        return "chat"
+    return "validate"
+
+async def build_graph():
+    
+    global tools_by_name
+    tools_by_name.clear()
+    tools_by_name.update(await get_tools_client())
     
     builder = StateGraph(MessagesState)
-    builder.add_node("detect_intent", detect_intent)
-    builder.add_node("collect_missing_data", collect_missing_data)
-    builder.add_node("update_user_data", update_user_data)
-    builder.add_node("llm", call_llm)
+    
+    builder.add_node("detect_tool", detect_tool)
+    builder.add_node("validate", validate)
+    builder.add_node("update_args", update_args)
     builder.add_node("tool", tool_node)
-    
-    builder.set_entry_point("detect_intent")
-    
-    builder.add_edge("detect_intent","update_user_data")
-    builder.add_edge("update_user_data","collect_missing_data")
-    
+    builder.add_node("chat", chat_natural)
+
+    builder.set_entry_point("detect_tool")
+
+    builder.add_edge("detect_tool", "update_args")
+
     builder.add_conditional_edges(
-        "collect_missing_data",
-        route_after_collect,
+        "update_args",
+        route,
         {
-            "llm":"llm",
-            END:END
+            "chat": "chat",
+            "validate": "validate"
         }
     )
-    builder.add_edge("llm","tool")
-    builder.add_edge("tool",END)
-    
-    return builder.compile()
 
-if __name__ == "__main__":
-    from langchain_core.messages import HumanMessage
-    graph = build_graph()
+    builder.add_conditional_edges(
+        "validate",
+        should_call_tool,
+        {
+            True: "tool",
+            False: END
+        }
+    )
+
+    builder.add_edge("tool", END)
+    builder.add_edge("chat", END)
+
+    return builder.compile(checkpointer=memory)
+async def main():
+
+    graph = await build_graph()
+
     state = {
-        "messages":[]
+        "messages": [],
+        "selected_tool": None,
+        "tool_args": {},
+        "missing_fields": [],
+        "pending_field": None
     }
     
+    config={
+        "configurable":{
+            "thread_id":"test"
+        }
+    }
+
+    print("\n Chat iniciado (escribe 'exit' para salir)\n")
+
     while True:
-        text = input("Usuario: ")
+
+        print("Usuario: ", end="", flush=True)
+        user_input = await asyncio.to_thread(input)
+
+        if user_input.lower() in ["exit", "quit"]:
+            break
+
+        
         state["messages"].append(
-            HumanMessage(content=text)
+            HumanMessage(content=user_input)
         )
-        state = graph.invoke(state)
-        print("\nSTATE:")
-        print(state)
+
+        state = await graph.ainvoke(state,config=config)
+
         
-        last = state["messages"][-1]
-        
-        if isinstance(last.content, list):
-            text = "".join(
-                part.get("text", "") if isinstance(part.dict) else str(part)
-                for part in last.content
-            )
+        last_msg = state["messages"][-1]
+        bot_output = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
+        if hasattr(last_msg, "content"):
+            print("\nBot:", last_msg.content)
         else:
-            text = last.content
-        print(
-            "\nBot: ",
-            text
+            print("\nBot:", last_msg)
+            
+        save_message(
+            session_id="test",
+            user=user_input,
+            bot=bot_output
         )
-    # result = graph.invoke({
-    #     "messages":[
-    #         HumanMessage(content="Quiero registrar un nuevo usuario")
-    #     ]
-    # })
-    # print(result)
+
+
+# -----------------------------
+# ENTRY POINT
+# -----------------------------
+if __name__ == "__main__":
+    asyncio.run(main())

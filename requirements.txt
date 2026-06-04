@@ -12,3 +12,4 @@ langchain
 asyncio
 langchain_google_genai
 langchaain-google-vertexai
+langchain_pinecone

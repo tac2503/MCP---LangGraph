@@ -1,9 +1,21 @@
-from langchain.tools import tool
+import os
+import sys
+
+from fastmcp import FastMCP
+
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from backend.api.routes.user import create_user, get_user_by_cedula, get_user_by_email
 from backend.Database.config import SessionLocal
 from backend.Schemas.usuario import usuarioCreate
 
-@tool
+
+mcp = FastMCP("Sistema de usuarios")
+
+@mcp.tool()
 def registrar_usuario(nombre:str, cedula:str, email:str, celular:str):
     """Registra un usuario en la base de datos."""
     db = SessionLocal()
@@ -19,7 +31,8 @@ def registrar_usuario(nombre:str, cedula:str, email:str, celular:str):
         return create_user(json,db)
     finally:
         db.close()
-@tool
+
+@mcp.tool()
 def obtener_usuario_cedula(cedula:str):
     """Consulta un usuario por número de cédula."""
     db = SessionLocal()
@@ -27,7 +40,8 @@ def obtener_usuario_cedula(cedula:str):
         return get_user_by_cedula(cedula, db)
     finally:
         db.close()
-@tool
+        
+@mcp.tool()
 def obtener_usuario_email(email:str):
     """Consulta un usuario por dirección de correo electrónico."""
     db = SessionLocal()
@@ -35,7 +49,5 @@ def obtener_usuario_email(email:str):
         return get_user_by_email(email, db)
     finally:
         db.close()
-
-
-tools = [obtener_usuario_cedula, obtener_usuario_email, registrar_usuario]
-tools_by_name = {tool.name: tool for tool in tools}
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
