@@ -1,15 +1,22 @@
 :root {
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Google Sans", "Roboto", "ui-sans-serif", system-ui, sans-serif;
   color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
-  margin: 0;
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #1c1f26;
+  color: #e3e3e3;
+  font-size: 15px;
+  line-height: 1.6;
 }
