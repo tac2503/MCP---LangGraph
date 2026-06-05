@@ -6,8 +6,8 @@ import "./Chat.css";
 const SUGGESTIONS = [
   { icon: "💡", text: "¿Qué puedes hacer por mí?" },
   { icon: "🔍", text: "¿Qué información tienes sobre los usuarios?" },
-  { icon: "✍️", text: "Ayúdame a redactar un mensaje" },
-  { icon: "⚙️", text: "Explícame cómo funciona este sistema" },
+  { icon: "✍️", text: "Quiero registrar un usuario" },
+  { icon: "⚙️", text: "Quiero consultar un usuario" },
 ];
 
 function Chat({ sidebarOpen, onToggleSidebar, onFirstMessage }) {

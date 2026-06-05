@@ -28,6 +28,8 @@ def detect_tool(state):
                     Si el usuario pregunta algo relacionado con conversaciones aneriores
                     (ejemplo: "que usuarios he consultado","cual era su email",etc)
                     entonces la tool será : ninguna
+                    Es importante que analices la intención, si la intención del usuario es referirse a cosas ya hechas como consultas o registros realizados antes,
+                    la tool será :ninguna
                     """)
     ])
     content = response.content
@@ -158,8 +160,7 @@ def chat_natural(state):
                 Regla importante:
                 -Si el usuario hace consultas relacionadas con acciones hechas anteriormente,
                 revisa el contexto y responde correctamente de acuerdo a eso.
-                - Ahora, si el usuario hace consulas relacionadas con acciones hechas anteriormente o en otras ejecuciones(ejemplo: necesito saber todos los usuarios consultados/regisrtados en todas las sesiones), pero no hay esa información en el contexto,
-                entonces vas a responder usando este contexto que abarca todo lo que has realizado hasta ahora:
+                - Siempre, si el usuario hace consultas relacionado a acciones pasadas, siempre apoyate y complementate también con este contexto:
                 {long_memory}
                 
                 Nota: También puedes responder analizando los dos contextos y completando lo que creas que falte con la información del contexto largo.
