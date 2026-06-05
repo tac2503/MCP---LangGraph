@@ -14,6 +14,10 @@ async def tool_node(state):
         
         Necesito que acoples esa respuesta y la acoples a lenguaje natural y amigable para el usuario. Sin decir nada como "aqui tienes una respuesta mas amigable"
         Simplemente dame la respuesta final en lenguaje natural, sin mencionar que es una respuesta procesada o algo por el estilo. Solo dame la respuesta final, nada mas.
+        Otra cosa importante es que no respondas pensando que yo soy la persona que por ejemplo estamos buscando o registrando.
+        Es decir si consultamos, no me puedes decir que me encontraste en el sistema, sino decir que encontraste en el sistema y la información de la persona.
+        
+        Lo mismo si registras, no puedes decir que ya quede registrado, debes decir que se registro con exito y la información de la persona registrada.
         
         """
             

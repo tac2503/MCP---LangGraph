@@ -8,7 +8,7 @@ router = APIRouter(
     tags=["users"],
 )
 
-@router.post("/create",response_model=usuarioResponse, status_code=201)
+@router.post("/create", status_code=201)
 def create_user(usuario:usuarioCreate, db:Session = Depends(get_db)):
     """Crea un usuario nuevo en la base de datos si no existe"""
     

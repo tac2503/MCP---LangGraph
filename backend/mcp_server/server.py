@@ -18,19 +18,6 @@ mcp = FastMCP("Sistema de usuarios")
 @mcp.tool()
 def registrar_usuario(nombre:str, cedula:str, email:str, celular:str):
     """Registra un usuario en la base de datos."""
-    # db = SessionLocal()
-    # try:
-        
-    #     json = usuarioCreate(
-    #         nombre=nombre,
-    #         cedula=cedula,
-    #         email=email,
-    #         celular=celular
-    #     )
-    
-    #     return create_user(json,db)
-    # finally:
-    #     db.close()
     json = usuarioCreate(
             nombre=nombre,
             cedula=cedula,
@@ -43,11 +30,7 @@ def registrar_usuario(nombre:str, cedula:str, email:str, celular:str):
 @mcp.tool()
 def obtener_usuario_cedula(cedula:str):
     """Consulta un usuario por número de cédula."""
-    # db = SessionLocal()
-    # try:
-    #     return get_user_by_cedula(cedula, db)
-    # finally:
-    #     db.close()
+
     url = f"http://localhost:8000/users/get_by_cedula/{cedula}"
     response = requests.get(url)
     return response.json()
@@ -55,11 +38,7 @@ def obtener_usuario_cedula(cedula:str):
 @mcp.tool()
 def obtener_usuario_email(email:str):
     """Consulta un usuario por dirección de correo electrónico."""
-    # db = SessionLocal()
-    # try:
-    #     return get_user_by_email(email, db)
-    # finally:
-    #     db.close()
+
     url = f"http://localhost:8000/users/get_by_email/{email}"
     response = requests.get(url)
     return response.json()
