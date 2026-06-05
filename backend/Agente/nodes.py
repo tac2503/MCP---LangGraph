@@ -68,9 +68,18 @@ def detect_tool(state):
                     {{"email":"test@test.com"}}
                 """
             )
-        ])
+        ]).content
+        if isinstance(extract, str):
+            extract=extract.strip()
+        elif isinstance(extract,list):
+            extract="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in extract
+            ).strip()
+        else:
+            extract=str(extract).strip()
         try: 
-            args=eval(extract.content)
+            args=eval(extract)
         except:
             args={}
     
@@ -168,11 +177,19 @@ def chat_natural(state):
     response = model.invoke([
         system_prompt,
         state["messages"][-1]
-    ])
-    
+    ]).content
+    if isinstance(response, str):
+        response=response.strip()
+    elif isinstance(response,list):
+        response="".join(
+            part.get("text","") if isinstance(part,dict) else str(part)
+            for part in response
+        ).strip()
+    else:
+        response=str(response).strip()
     return {
         "messages":[
-            AIMessage(content=response.content)
+            AIMessage(content=response)
         ],
         "selected_tool":None,
         "tool_args":{},

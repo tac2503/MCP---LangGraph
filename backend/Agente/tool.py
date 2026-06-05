@@ -18,11 +18,20 @@ async def tool_node(state):
         """
             
         )
-    ])
+    ]).content
+    if isinstance(natural_result, str):
+        natural_result=natural_result.strip()
+    elif isinstance(natural_result,list):
+        natural_result="".join(
+            part.get("text","") if isinstance(part,dict) else str(part)
+            for part in natural_result
+        ).strip()
+    else:
+        natural_result=str(natural_result).strip()
     return {
         "messages":[
             ToolMessage(
-                content=str(natural_result.content),
+                content=str(natural_result),
                 tool_call_id="final"
             )
         ],
