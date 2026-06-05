@@ -1,40 +1,113 @@
-.message {
-
-    max-width: 75%;
-
-    padding: 14px 18px;
-
-    border-radius: 18px;
-
-    word-wrap: break-word;
-
-    line-height: 1.5;
+/* ── Base row ── */
+.msg {
+  display: flex;
+  width: 100%;
+  padding: 10px 0;
+  animation: msg-fade 0.22s ease both;
 }
 
-.message.user {
-
-    align-self: flex-end;
-
-    background: linear-gradient(
-        135deg,
-        #2563eb,
-        #1d4ed8
-    );
-
-    color: white;
-
-    border-bottom-right-radius: 6px;
+@keyframes msg-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.message.assistant {
+/* ── User message — pill bubble on the right ── */
+.msg--user {
+  justify-content: flex-end;
+}
 
-    align-self: flex-start;
+.msg__bubble {
+  max-width: 72%;
+  background: #2e3340;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px 20px 4px 20px;
+  padding: 13px 18px;
+  font-size: 15px;
+  color: #e3e3e3;
+  line-height: 1.65;
+  word-break: break-word;
+}
 
-    background: rgba(255,255,255,0.12);
+/* ── Assistant message — flat with gem avatar ── */
+.msg--assistant {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 12px;
+}
 
-    color: white;
+.msg__gem-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(168,85,247,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 
-    border-bottom-left-radius: 6px;
+.msg__body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
 
-    backdrop-filter: blur(10px);
+.msg__text {
+  font-size: 15px;
+  color: #d1d5db;
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+/* ── Code block ── */
+.msg__code {
+  background: #13151b;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px 18px;
+  overflow-x: auto;
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.msg__code code {
+  font-family: "Consolas", "Fira Code", "Menlo", monospace;
+  color: #a5b4fc;
+}
+
+.msg__code-lang {
+  display: block;
+  font-size: 11px;
+  color: #5f6672;
+  font-family: "Consolas", monospace;
+  margin-bottom: 8px;
+}
+
+/* ── Shimmer loading ── */
+.msg__shimmer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.msg__shimmer-bar {
+  display: block;
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(168,85,247,0.12) 40%,
+    rgba(255,255,255,0.04) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
