@@ -68,6 +68,10 @@ def detect_tool(state):
                     consulta usuario con email test@test.com
                     respuesta:
                     {{"email":"test@test.com"}}
+                    mensaje:
+                    quiero crear registro de Maicol con cedula 00003
+                    respuesta:
+                    {{"nombre":"Maicol", "cedula":"00003"}}
                 """
             )
         ]).content
