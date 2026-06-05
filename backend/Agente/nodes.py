@@ -14,20 +14,58 @@ def detect_tool(state):
     
     response = model.invoke([
         HumanMessage(content=f"""
-                    Selecciona la tool correcta.
-                    Tools disponibles:
+                    Eres un clasificador de intención para seleccionar herramientas.
+
+                    TOOLS DISPONIBLES:
                     {list(tools_by_name.keys())}
-                    
-                    Mensaje del usuario:
+
+                    MENSAJE DEL USUARIO:
                     {user_message}
-                    
-                    Responed SOLO con el nombre de la tool. Nada de cosas raras SOLO el nombre de la tool.
-                    Si no aplica ninguna, responde: ninguna
-                    
-                    Si el mensaje de consultar no especifica si es por cedula o por email, será buscar por cedula.
-                    Si el usuario pregunta algo relacionado con conversaciones aneriores
-                    (ejemplo: "que usuarios he consultado","cual era su email",etc)
-                    entonces la tool será : ninguna
+
+                    INSTRUCCIONES:
+
+                    Analiza la intención REAL del usuario, no solo palabras clave.
+                    Solo selecciona una tool cuando el usuario esté solicitando explícitamente una acción que corresponda a una de las tools disponibles.
+                    Si el usuario está haciendo una pregunta general, conversando, pidiendo información, definiendo conceptos, preguntando por personas famosas, lugares, empresas, eventos o cualquier tema de conocimiento general, responde:
+                    ninguna
+
+                    Ejemplos:
+
+                    "¿Quién es Messi?" → ninguna
+                    "¿Qué es Python?" → ninguna
+                    "¿Cuándo nació Shakira?" → ninguna
+                    "Explícame qué es una API" → ninguna
+                    Si existe una tool para consultar usuarios, SOLO debe utilizarse cuando el usuario claramente quiera buscar información de un usuario en el sistema.
+
+                    Ejemplos:
+
+                    "Consulta el usuario 12345678" → obtener_usuario_cedula
+                    "Busca el usuario con cédula 12345678" → obtener_usuario_cedula
+                    "Dame la información del usuario 12345678" → obtener_usuario_cedula
+
+                    NO usar obtener_usuario_cedula ni otra tool para:
+
+                    "¿Quién es Messi?"
+                    "¿Quién es Juan Pérez?"
+                    "Háblame de Elon Musk"
+                    "¿Quién fue Simón Bolívar?"
+                    Si el mensaje de consulta no especifica si es por cédula o email, asumir búsqueda por cédula.
+                    Si el usuario pregunta por consultas previas, resultados anteriores o contexto histórico de la conversación, responder:
+                    ninguna
+
+                    Ejemplos:
+
+                    "¿Qué usuarios consulté?"
+                    "¿Cuál era su email?"
+                    "¿Qué me mostraste antes?"
+                    "¿Qué resultado obtuvimos?"
+                    Si el mensaje no corresponde claramente a ninguna tool disponible, responder:
+                    ninguna
+                    La respuesta debe contener ÚNICAMENTE:
+                    El nombre exacto de una tool, o
+                    ninguna
+
+                    NO agregues explicaciones, puntuación, comentarios ni texto adicional.
                     """)
     ])
     content = response.content
@@ -66,11 +104,24 @@ def detect_tool(state):
                     consulta usuario con email test@test.com
                     respuesta:
                     {{"email":"test@test.com"}}
+                    mensaje:
+                    quiero crear registro de Maicol con cedula 00003
+                    respuesta:
+                    {{"nombre":"Maicol", "cedula":"00003"}}
                 """
             )
-        ])
+        ]).content
+        if isinstance(extract, str):
+            extract=extract.strip()
+        elif isinstance(extract,list):
+            extract="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in extract
+            ).strip()
+        else:
+            extract=str(extract).strip()
         try: 
-            args=eval(extract.content)
+            args=eval(extract)
         except:
             args={}
     
@@ -137,25 +188,66 @@ def chat_natural(state):
     )
     system_prompt = SystemMessage(
         content =(f"""
-                Eres un asistente con memoria de conversación y tu función principal es ayudar a crear y consultar usuarios
-                por cedula o email.
-                Si el usuario pregunta relacionado con tus utilidades o que puedes hacer, debes explicar claramente
-                que puedes gestionar usuarios, crearlos y consultarlos por cédula o correo.
-                Y si el usuario pregunta relacionado a acciones pasadas:
-                
-                Contexto completo:
+                Eres un asistente especializado EXCLUSIVAMENTE en la gestión de usuarios.
+
+                Tus únicas funciones son:
+
+                1. Crear usuarios.
+                2. Consultar usuarios por cédula.
+                3. Consultar usuarios por email.
+                4. Responder preguntas sobre consultas o acciones previas realizadas dentro de esta conversación utilizando el contexto disponible.
+
+                Contexto reciente:
                 {memory}
-                
-                Regla importante:
-                -Si el usuario hace consultas relacionadas con acciones hechas anteriormente,
-                revisa el contexto y responde correctamente de acuerdo a eso.
-                - Ahora, si el usuario hace consulas relacionadas con acciones hechas anteriormente o en otras ejecuciones(ejemplo: necesito saber todos los usuarios consultados/regisrtados en todas las sesiones), pero no hay esa información en el contexto,
-                entonces vas a responder usando este contexto que abarca todo lo que has realizado hasta ahora:
+
+                Contexto histórico:
                 {long_memory}
-                
-                Nota: También puedes responder analizando los dos contextos y completando lo que creas que falte con la información del contexto largo.
-                
-                
+
+                REGLAS DE COMPORTAMIENTO
+
+                1. NO eres un asistente de propósito general.
+
+                2. NO debes responder preguntas de cultura general, historia, deportes, tecnología, ciencia, geografía, entretenimiento, política ni ningún tema ajeno a la gestión de usuarios.
+
+                3. Si el usuario pregunta algo fuera de tus funciones, NO intentes responder parcialmente ni proporcionar información relacionada.
+
+                Ejemplos de preguntas fuera de alcance:
+
+                * ¿Quién es Messi?
+                * ¿Qué es Python?
+                * ¿Cuál es la capital de Francia?
+                * ¿Quién ganó el mundial?
+                * Explícame inteligencia artificial
+
+                Para cualquier pregunta fuera de alcance debes responder EXACTAMENTE:
+
+                "No fui creado para responder ese tipo de consultas. Mis funciones son:
+
+                * Crear usuarios.
+                * Consultar usuarios por cédula.
+                * Consultar usuarios por email.
+                * Informar sobre consultas realizadas previamente dentro de esta conversación."
+
+                4. Si el usuario pregunta qué puedes hacer, responde explicando únicamente las funciones anteriores.
+
+                5. Si el usuario hace referencia a acciones pasadas, consultas previas o usuarios consultados anteriormente, utiliza primero:
+                {memory}
+
+                Y complementa la respuesta con:
+                {long_memory}
+
+                6. Nunca inventes información que no exista en los contextos.
+
+                7. Si la solicitud es ambigua y no está claramente relacionada con la gestión de usuarios, considérala fuera de alcance y utiliza el mensaje de rechazo definido anteriormente.
+
+                IMPORTANTE:
+                Antes de responder, verifica:
+
+                * ¿La solicitud trata sobre crear usuarios?
+                * ¿La solicitud trata sobre consultar usuarios?
+                * ¿La solicitud trata sobre consultas previas de usuarios?
+
+                Si la respuesta es NO para las tres preguntas, utiliza el mensaje de rechazo.
                 
                 """
             # "Eres un agente de gestión de usuarios."
@@ -168,11 +260,19 @@ def chat_natural(state):
     response = model.invoke([
         system_prompt,
         state["messages"][-1]
-    ])
-    
+    ]).content
+    if isinstance(response, str):
+        response=response.strip()
+    elif isinstance(response,list):
+        response="".join(
+            part.get("text","") if isinstance(part,dict) else str(part)
+            for part in response
+        ).strip()
+    else:
+        response=str(response).strip()
     return {
         "messages":[
-            AIMessage(content=response.content)
+            AIMessage(content=response)
         ],
         "selected_tool":None,
         "tool_args":{},
