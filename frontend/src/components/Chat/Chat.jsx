@@ -193,28 +193,44 @@ function SendIcon() {
   );
 }
 
-/* Gemini star / sparkle logo */
+/* Hexagon / circuit node logo */
 function GeminiStar() {
   return (
-    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="gem-svg">
-      <path
-        d="M14 2C14 2 15.5 9.5 20 14C15.5 18.5 14 26 14 26C14 26 12.5 18.5 8 14C12.5 9.5 14 2 14 2Z"
-        fill="url(#gem-grad)"
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="gem-svg">
+      {/* Outer hexagon */}
+      <polygon
+        points="24,4 41,13.5 41,34.5 24,44 7,34.5 7,13.5"
+        stroke="url(#hex-stroke)"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.6"
       />
-      <path
-        d="M2 14C2 14 9.5 12.5 14 8C18.5 12.5 26 14 26 14C26 14 18.5 15.5 14 20C9.5 15.5 2 14 2 14Z"
-        fill="url(#gem-grad2)"
+      {/* Inner hexagon */}
+      <polygon
+        points="24,11 35,17 35,31 24,37 13,31 13,17"
+        stroke="url(#hex-stroke)"
+        strokeWidth="1"
+        fill="url(#hex-fill)"
+        opacity="0.9"
       />
+      {/* Center dot */}
+      <circle cx="24" cy="24" r="3.5" fill="url(#hex-stroke)" />
+      {/* Connector lines */}
+      <line x1="24" y1="11" x2="24" y2="17" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
+      <line x1="24" y1="31" x2="24" y2="37" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
+      <line x1="13" y1="17" x2="17" y2="19.5" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
+      <line x1="35" y1="17" x2="31" y2="19.5" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
+      <line x1="13" y1="31" x2="17" y2="28.5" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
+      <line x1="35" y1="31" x2="31" y2="28.5" stroke="url(#hex-stroke)" strokeWidth="1" opacity="0.5" />
       <defs>
-        <linearGradient id="gem-grad" x1="14" y1="2" x2="14" y2="26" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#818cf8" />
-          <stop offset="0.5" stopColor="#a855f7" />
-          <stop offset="1" stopColor="#ec4899" />
+        <linearGradient id="hex-stroke" x1="7" y1="4" x2="41" y2="44" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#7c85f5" />
+          <stop offset="0.5" stopColor="#a78bfa" />
+          <stop offset="1" stopColor="#7c85f5" />
         </linearGradient>
-        <linearGradient id="gem-grad2" x1="2" y1="14" x2="26" y2="14" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#38bdf8" />
-          <stop offset="0.5" stopColor="#818cf8" />
-          <stop offset="1" stopColor="#a855f7" />
+        <linearGradient id="hex-fill" x1="13" y1="11" x2="35" y2="37" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#1a1f2e" />
+          <stop offset="1" stopColor="#111420" />
         </linearGradient>
       </defs>
     </svg>

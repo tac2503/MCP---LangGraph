@@ -79,23 +79,21 @@ function MessageContent({ content }) {
 
 function GemMiniIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
-      <path
-        d="M10 1.5C10 1.5 11 6.8 14.5 10C11 13.2 10 18.5 10 18.5C10 18.5 9 13.2 5.5 10C9 6.8 10 1.5 10 1.5Z"
-        fill="url(#gm1)"
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+      {/* Mini hexagon circuit */}
+      <polygon
+        points="10,2 17,5.5 17,14.5 10,18 3,14.5 3,5.5"
+        stroke="url(#mini-grad)"
+        strokeWidth="1.5"
+        fill="#111420"
       />
-      <path
-        d="M1.5 10C1.5 10 6.8 9 10 5.5C13.2 9 18.5 10 18.5 10C18.5 10 13.2 11 10 14.5C6.8 11 1.5 10 1.5 10Z"
-        fill="url(#gm2)"
-      />
+      <circle cx="10" cy="10" r="2.2" fill="url(#mini-grad)" />
+      <line x1="10" y1="2"  x2="10" y2="7.8"  stroke="url(#mini-grad)" strokeWidth="1" opacity="0.5" />
+      <line x1="10" y1="12.2" x2="10" y2="18" stroke="url(#mini-grad)" strokeWidth="1" opacity="0.5" />
       <defs>
-        <linearGradient id="gm1" x1="10" y1="1.5" x2="10" y2="18.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#818cf8" />
-          <stop offset="1" stopColor="#ec4899" />
-        </linearGradient>
-        <linearGradient id="gm2" x1="1.5" y1="10" x2="18.5" y2="10" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#38bdf8" />
-          <stop offset="1" stopColor="#a855f7" />
+        <linearGradient id="mini-grad" x1="3" y1="2" x2="17" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#7c85f5" />
+          <stop offset="1" stopColor="#a78bfa" />
         </linearGradient>
       </defs>
     </svg>
