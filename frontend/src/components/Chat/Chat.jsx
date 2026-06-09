@@ -38,10 +38,11 @@ function Chat() {
         ...prev,
         { id: crypto.randomUUID(), role: "assistant", content: data.response ?? "Sin respuesta." },
       ]);
-    } catch {
+    } catch (error) {
+      const mensajeError = error.response?.data?.error ?? "Error al conectar con el servidor.";
       setMessages(prev => [
         ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: "Error al conectar con el servidor." },
+        { id: crypto.randomUUID(), role: "assistant", content: mensajeError },
       ]);
     } finally {
       setLoading(false);

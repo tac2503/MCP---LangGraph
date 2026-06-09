@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 from fastmcp import FastMCP
+from pydantic import ValidationError
 
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,12 +19,15 @@ mcp = FastMCP("Sistema de usuarios")
 @mcp.tool()
 def registrar_usuario(nombre:str, cedula:str, email:str, celular:str):
     """Registra un usuario en la base de datos."""
-    json = usuarioCreate(
-            nombre=nombre,
-            cedula=cedula,
-            email=email,
-            celular=celular
-        )
+    try:
+        json = usuarioCreate(
+                nombre=nombre,
+                cedula=cedula,
+                email=email,
+                celular=celular
+            )
+    except ValidationError:
+        return {"error":"El correo electrónico es inválido"}
     url = "http://localhost:8000/users/create"
     response = requests.post(url, json=json.model_dump())
     return response.json()

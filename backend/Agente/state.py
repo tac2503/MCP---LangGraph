@@ -9,5 +9,5 @@ class MessagesState(TypedDict):
     tool_args: dict | None
     missing_fields: list[str] | None
     pending_field: str | None
-    
+    last_filled_field:str | None
         

@@ -176,7 +176,8 @@ def update_args(state):
     
     return {
         "tool_args":args,
-        "pending_field":None
+        "pending_field":None,
+        "last_filled_field":field
     }
 
 def chat_natural(state):
@@ -250,11 +251,7 @@ def chat_natural(state):
                 Si la respuesta es NO para las tres preguntas, utiliza el mensaje de rechazo.
                 
                 """
-            # "Eres un agente de gestión de usuarios."
-            # "Tu función es ayudar a crear usuarios y consultar usuarios"   
-            # "por cedula o email."
-            # "Si el usuario hace una pregunta relacionada a tus utilidades o que puedes hacer, debes explicar claramente "
-            # "que puedes gestionar usuarios, crearlos y consultarlos por cédula o correo."
+            
         )
     )
     response = model.invoke([
@@ -280,28 +277,82 @@ def chat_natural(state):
         "pending_field":None
     }
     
-# def update_memory_summary(state):
-#     model = get_model()
-#     messages = state["messages"].content
+
+def validate_field(state):
+    field = state.get("last_filled_field")
+    value= state.get("tool_args",{}).get(field,"")
+    model = get_model()
+    if field == "nombre":
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"Es '{value}' un nombre real y coherente para una persona? Responde solo 'válido' o 'inválido'"
+            )
+        ]).content
+        if isinstance(resultado, str):
+            es_valido=resultado.strip().lower()
+        elif isinstance(resultado,list):
+            es_valido="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            es_valido=str(resultado).strip().lower()
+    elif field == "cedula": 
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"Es {value} una cédula posible para una persona? Ten en cuenta que las cédulas en Colombia son números. Response solo 'válido' o 'inválido'."
+            )
+        ]).content
+        if isinstance(resultado, str):
+            es_valido=resultado.strip().lower()
+        elif isinstance(resultado,list):
+            es_valido="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            es_valido=str(resultado).strip().lower()
+    elif field == "email": 
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"Es {value} un email posible para una persona? Response solo 'válido' o 'inválido'."
+            )
+        ]).content
+        if isinstance(resultado, str):
+            es_valido=resultado.strip().lower()
+        elif isinstance(resultado,list):
+            es_valido="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            es_valido=str(resultado).strip().lower()
+    elif field == "celular": 
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"Es {value} un celular posible para una persona? Response solo 'válido' o 'inválido'."
+            )
+        ]).content
+        if isinstance(resultado, str):
+            es_valido=resultado.strip().lower()
+        elif isinstance(resultado,list):
+            es_valido="".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            es_valido=str(resultado).strip().lower()
+    else: 
+        es_valido=True
     
-#     recent_messages = messages[-10:]
-    
-#     response = model.invoke([
-#         HumanMessage(content=f"""
-#                     Eres un sistema de memoria.
-#                     Resume la conversación manteniendo:
-#                     -usuarios consultados
-#                     -datos importantes
-#                     -acciones realizadas
-#                     -contexto actual
-                    
-#                     Conversación:
-#                     {recent_messages}
-                    
-#                     """)
-#     ])
-    
-#     return {
-#         "memory_summary":response.content
-#     }
-    
+    if es_valido == 'inválido':
+        args = state.get("tool_args",{})
+        args.pop(field,None)
+        return {
+            "tool_args":args,
+            "pending_field":field,
+            "missing_fields":[field],
+            "messages": [AIMessage(content=f"'{value}'no es un {field} válido. Porfavor ingresa un {field} válido.")]
+        }
+        
+    return {}
