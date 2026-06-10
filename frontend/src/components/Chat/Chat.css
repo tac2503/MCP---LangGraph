@@ -23,10 +23,30 @@
 }
 
 .chat__title {
+  flex: 1;
   font-size: 15px;
   font-weight: 600;
   color: #c8cce0;
   letter-spacing: -0.01em;
+}
+
+.chat__logout {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #1a1d28;
+  color: #7a7f98;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chat__logout:hover {
+  background: #1e2130;
+  color: #c8cce0;
 }
 
 /* ── Body ── */

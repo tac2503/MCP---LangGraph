@@ -1,11 +1,12 @@
 # main.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from langchain_core.messages import HumanMessage
 from backend.Agente.graph import build_graph
 from backend.Pinecone.pinecone import save_message
+from backend.utils.utils import get_current_user
 
 router = APIRouter(
     prefix="/chat",
@@ -22,7 +23,7 @@ class ChatRequest(BaseModel):
 
 
 @router.post("")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest,current_user:dict=Depends(get_current_user)):
     global graph
 
     if graph is None:

@@ -3,7 +3,7 @@ import Message from "./Message";
 import { sendMessage } from "../../services/chatService";
 import "./Chat.css";
 
-function Chat() {
+function Chat({ onLogout }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,10 +40,19 @@ function Chat() {
       ]);
     } catch (error) {
       const mensajeError = error.response?.data?.error ?? "Error al conectar con el servidor.";
-      setMessages(prev => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: mensajeError },
-      ]);
+      
+      // Si el error es de autenticación, cerrar sesión
+      if (mensajeError.includes('sesión') || mensajeError.includes('autenticado')) {
+        setMessages(prev => [...prev, 
+          { id: crypto.randomUUID(), role: "assistant", content: mensajeError }
+        ]);
+        setTimeout(() => onLogout(), 2000);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          { id: crypto.randomUUID(), role: "assistant", content: mensajeError },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,6 +74,14 @@ function Chat() {
           <HexIcon />
         </div>
         <span className="chat__title">MCP Assistant</span>
+        <button 
+          className="chat__logout"
+          onClick={onLogout}
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+        >
+          <LogoutIcon />
+        </button>
       </header>
 
       {/* Messages */}
@@ -132,6 +149,14 @@ function SendIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
     </svg>
   );
 }

@@ -13,3 +13,5 @@ asyncio
 langchain_google_genai
 langchain_pinecone
 requests
+PyJWT
+bcrypt

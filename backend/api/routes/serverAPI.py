@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.routes.user import router as user_router
+from backend.api.routes.auth import router as auth_router
 from backend.api.routes.chat import (router as chat_router )
 
 
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(user_router)
+app.include_router(auth_router)
 app.include_router(chat_router)
 
 @app.exception_handler(RequestValidationError)

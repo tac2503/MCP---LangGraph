@@ -21,6 +21,7 @@ def get_db():
 def create_tables():
     
     import backend.Modelos.usuario
+    import backend.Modelos.auth_user
     
     try:
         Base.metadata.create_all(bind=engine)
