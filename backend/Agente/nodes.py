@@ -176,7 +176,8 @@ def update_args(state):
     
     return {
         "tool_args":args,
-        "pending_field":None
+        "pending_field":None,
+        "last_filled_field":field
     }
 
 def chat_natural(state):
@@ -250,11 +251,7 @@ def chat_natural(state):
                 Si la respuesta es NO para las tres preguntas, utiliza el mensaje de rechazo.
                 
                 """
-            # "Eres un agente de gestión de usuarios."
-            # "Tu función es ayudar a crear usuarios y consultar usuarios"   
-            # "por cedula o email."
-            # "Si el usuario hace una pregunta relacionada a tus utilidades o que puedes hacer, debes explicar claramente "
-            # "que puedes gestionar usuarios, crearlos y consultarlos por cédula o correo."
+            
         )
     )
     response = model.invoke([
@@ -277,31 +274,128 @@ def chat_natural(state):
         "selected_tool":None,
         "tool_args":{},
         "missing_fields":[],
-        "pending_field":None
+        "pending_field":None,
+        "last_filled_field":None,
+        "validated_fields":[]
     }
     
-# def update_memory_summary(state):
-#     model = get_model()
-#     messages = state["messages"].content
+
+def validate_field(state):
+   
+    validated = state.get("validated_fields") or []
     
-#     recent_messages = messages[-10:]
     
-#     response = model.invoke([
-#         HumanMessage(content=f"""
-#                     Eres un sistema de memoria.
-#                     Resume la conversación manteniendo:
-#                     -usuarios consultados
-#                     -datos importantes
-#                     -acciones realizadas
-#                     -contexto actual
-                    
-#                     Conversación:
-#                     {recent_messages}
-                    
-#                     """)
-#     ])
+    field = state.get("last_filled_field")
+    if field:
+        value = state.get("tool_args", {}).get(field, "")
+        es_valido = _validar_valor(field, value)
+        
+        if 'inválido' in es_valido:
+            args = state.get("tool_args", {})
+            args.pop(field, None)
+            return {
+                "tool_args": args,
+                "pending_field": field,
+                "missing_fields": [field],
+                "messages": [AIMessage(content=f"'{value}' no es una {field} válido. Por favor ingresa una {field} válido.")] if field=="cedula" else [AIMessage(content=f"'{value}' no es un {field} válido. Por favor ingresa un {field} válido.")]
+            }
+        validated = validated + [field]
     
-#     return {
-#         "memory_summary":response.content
-#     }
+   
+    sin_validar = [f for f in state.get("tool_args", {}) if f not in validated]
     
+    for field in sin_validar:
+        value = state.get("tool_args", {}).get(field, "")
+        es_valido = _validar_valor(field, value)
+        
+        if 'inválido' in es_valido:
+            args = state.get("tool_args", {})
+            args.pop(field, None)
+            return {
+                "tool_args": args,
+                "pending_field": field,
+                "missing_fields": [field],
+                "messages": [AIMessage(content=f"'{value}' no es una {field} válido. Por favor ingresa una {field} válido.")] if field=="cedula" else [AIMessage(content=f"'{value}' no es un {field} válido. Por favor ingresa un {field} válido.")]
+            }
+        validated = validated + [field]
+    
+    return {"validated_fields": validated}
+
+def _validar_valor(field, value):
+    """Valida un valor según el campo. Retorna 'válido' o 'inválido'."""
+    model = get_model()
+    
+    if field == "nombre":
+        resultado = model.invoke([
+            HumanMessage(
+               content=f"Es '{value}' un nombre real y coherente para una persona? Responde solo 'válido' o 'inválido'"
+            )
+        ]).content
+        if isinstance(resultado, str):
+            return resultado.strip().lower()
+        elif isinstance(resultado,list):
+            return "".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            return str(resultado).strip().lower()
+    elif field == "cedula": 
+        import re
+        return "válido" if re.match(r'^\d{6,12}$', value) else "inválido"
+    elif field == "email": 
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"""Valida si '{value}' es un email válido.
+
+                REGLAS ESTRICTAS:
+                - DEBE contener exactamente un símbolo @
+                - DEBE tener texto antes del @
+                - DEBE tener un dominio después del @ (ej: gmail.com, hotmail.com)
+                - El dominio DEBE tener al menos un punto
+                - DEBE tener una extensión válida después del punto (.com, .org, .net, etc)
+                - NO puede contener espacios
+                - NO puede ser solo letras sueltas (ej: "toc", "abc")
+
+                EJEMPLOS VÁLIDOS:
+                - usuario@gmail.com
+                - nombre.apellido@empresa.co
+                - test123@dominio.com.ar
+
+                EJEMPLOS INVÁLIDOS:
+                - toc (no tiene @)
+                - usuario@ (falta dominio)
+                - @dominio.com (falta usuario)
+                - usuario@dominio (falta extensión)
+                - usuario @dominio.com (tiene espacio)
+                - a@b (demasiado corto)
+
+                Responde ÚNICAMENTE con 'válido' o 'inválido'. Sin explicaciones."""
+            )
+        ]).content
+        if isinstance(resultado, str):
+            return resultado.strip().lower()
+        elif isinstance(resultado,list):
+            return "".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            return str(resultado).strip().lower()
+    elif field == "celular": 
+        resultado = model.invoke([
+            HumanMessage(
+                content=f"Es {value} un celular posible para una persona? Response solo 'válido' o 'inválido'."
+            )
+        ]).content
+        if isinstance(resultado, str):
+            return resultado.strip().lower()
+        elif isinstance(resultado,list):
+            return "".join(
+                part.get("text","") if isinstance(part,dict) else str(part)
+                for part in resultado
+            ).strip().lower()
+        else:
+            return str(resultado).strip().lower()
+    else: 
+        return "válido"

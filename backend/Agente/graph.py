@@ -9,7 +9,8 @@ from backend.Agente.nodes import(
     detect_tool,
     validate,
     update_args,
-    chat_natural
+    chat_natural,
+    validate_field
 )
 from backend.Agente.tool import tool_node
 from backend.mcp_server.model2 import get_tools_client
@@ -20,6 +21,12 @@ def should_call_tool(state):
 
 def route(state):
     
+    if state.get("selected_tool") in [None,"","ninguna"]:
+        return "chat"
+    return "validate"
+def route_after_validation(state):
+    if state.get("pending_field"):
+        return "end"
     if state.get("selected_tool") in [None,"","ninguna"]:
         return "chat"
     return "validate"
@@ -35,22 +42,32 @@ async def build_graph():
     builder.add_node("detect_tool", detect_tool)
     builder.add_node("validate", validate)
     builder.add_node("update_args", update_args)
+    builder.add_node("validate_field",validate_field)
     builder.add_node("tool", tool_node)
     builder.add_node("chat", chat_natural)
 
     builder.set_entry_point("detect_tool")
 
     builder.add_edge("detect_tool", "update_args")
+    builder.add_edge("update_args","validate_field")
 
+    # builder.add_conditional_edges(
+    #     "update_args",
+    #     route,
+    #     {
+    #         "chat": "chat",
+    #         "validate": "validate"
+    #     }
+    # )
     builder.add_conditional_edges(
-        "update_args",
-        route,
+        "validate_field",
+        route_after_validation,
         {
-            "chat": "chat",
-            "validate": "validate"
+            "end":END,
+            "chat":"chat",
+            "validate":"validate"
         }
     )
-
     builder.add_conditional_edges(
         "validate",
         should_call_tool,
