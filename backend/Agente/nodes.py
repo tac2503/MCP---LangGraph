@@ -346,7 +346,31 @@ def _validar_valor(field, value):
     elif field == "email": 
         resultado = model.invoke([
             HumanMessage(
-                content=f"Es {value} un email posible para una persona? Ten en cuenta los formatos de correo electrónico. Response solo 'válido' o 'inválido'."
+                content=f"""Valida si '{value}' es un email válido.
+
+                REGLAS ESTRICTAS:
+                - DEBE contener exactamente un símbolo @
+                - DEBE tener texto antes del @
+                - DEBE tener un dominio después del @ (ej: gmail.com, hotmail.com)
+                - El dominio DEBE tener al menos un punto
+                - DEBE tener una extensión válida después del punto (.com, .org, .net, etc)
+                - NO puede contener espacios
+                - NO puede ser solo letras sueltas (ej: "toc", "abc")
+
+                EJEMPLOS VÁLIDOS:
+                - usuario@gmail.com
+                - nombre.apellido@empresa.co
+                - test123@dominio.com.ar
+
+                EJEMPLOS INVÁLIDOS:
+                - toc (no tiene @)
+                - usuario@ (falta dominio)
+                - @dominio.com (falta usuario)
+                - usuario@dominio (falta extensión)
+                - usuario @dominio.com (tiene espacio)
+                - a@b (demasiado corto)
+
+                Responde ÚNICAMENTE con 'válido' o 'inválido'. Sin explicaciones."""
             )
         ]).content
         if isinstance(resultado, str):
