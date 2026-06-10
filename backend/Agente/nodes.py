@@ -274,59 +274,90 @@ def chat_natural(state):
         "selected_tool":None,
         "tool_args":{},
         "missing_fields":[],
-        "pending_field":None
+        "pending_field":None,
+        "last_filled_field":None,
+        "validated_fields":[]
     }
     
 
 def validate_field(state):
+   
+    validated = state.get("validated_fields") or []
+    
+    
     field = state.get("last_filled_field")
-    value= state.get("tool_args",{}).get(field,"")
+    if field:
+        value = state.get("tool_args", {}).get(field, "")
+        es_valido = _validar_valor(field, value)
+        
+        if 'inválido' in es_valido:
+            args = state.get("tool_args", {})
+            args.pop(field, None)
+            return {
+                "tool_args": args,
+                "pending_field": field,
+                "missing_fields": [field],
+                "messages": [AIMessage(content=f"'{value}' no es una {field} válido. Por favor ingresa una {field} válido.")] if field=="cedula" else [AIMessage(content=f"'{value}' no es un {field} válido. Por favor ingresa un {field} válido.")]
+            }
+        validated = validated + [field]
+    
+   
+    sin_validar = [f for f in state.get("tool_args", {}) if f not in validated]
+    
+    for field in sin_validar:
+        value = state.get("tool_args", {}).get(field, "")
+        es_valido = _validar_valor(field, value)
+        
+        if 'inválido' in es_valido:
+            args = state.get("tool_args", {})
+            args.pop(field, None)
+            return {
+                "tool_args": args,
+                "pending_field": field,
+                "missing_fields": [field],
+                "messages": [AIMessage(content=f"'{value}' no es una {field} válido. Por favor ingresa una {field} válido.")] if field=="cedula" else [AIMessage(content=f"'{value}' no es un {field} válido. Por favor ingresa un {field} válido.")]
+            }
+        validated = validated + [field]
+    
+    return {"validated_fields": validated}
+
+def _validar_valor(field, value):
+    """Valida un valor según el campo. Retorna 'válido' o 'inválido'."""
     model = get_model()
+    
     if field == "nombre":
         resultado = model.invoke([
             HumanMessage(
-                content=f"Es '{value}' un nombre real y coherente para una persona? Responde solo 'válido' o 'inválido'"
+               content=f"Es '{value}' un nombre real y coherente para una persona? Responde solo 'válido' o 'inválido'"
             )
         ]).content
         if isinstance(resultado, str):
-            es_valido=resultado.strip().lower()
+            return resultado.strip().lower()
         elif isinstance(resultado,list):
-            es_valido="".join(
+            return "".join(
                 part.get("text","") if isinstance(part,dict) else str(part)
                 for part in resultado
             ).strip().lower()
         else:
-            es_valido=str(resultado).strip().lower()
+            return str(resultado).strip().lower()
     elif field == "cedula": 
-        resultado = model.invoke([
-            HumanMessage(
-                content=f"Es {value} una cédula posible para una persona? Ten en cuenta que las cédulas en Colombia son números. Response solo 'válido' o 'inválido'."
-            )
-        ]).content
-        if isinstance(resultado, str):
-            es_valido=resultado.strip().lower()
-        elif isinstance(resultado,list):
-            es_valido="".join(
-                part.get("text","") if isinstance(part,dict) else str(part)
-                for part in resultado
-            ).strip().lower()
-        else:
-            es_valido=str(resultado).strip().lower()
+        import re
+        return "válido" if re.match(r'^\d{6,12}$', value) else "inválido"
     elif field == "email": 
         resultado = model.invoke([
             HumanMessage(
-                content=f"Es {value} un email posible para una persona? Response solo 'válido' o 'inválido'."
+                content=f"Es {value} un email posible para una persona? Ten en cuenta los formatos de correo electrónico. Response solo 'válido' o 'inválido'."
             )
         ]).content
         if isinstance(resultado, str):
-            es_valido=resultado.strip().lower()
+            return resultado.strip().lower()
         elif isinstance(resultado,list):
-            es_valido="".join(
+            return "".join(
                 part.get("text","") if isinstance(part,dict) else str(part)
                 for part in resultado
             ).strip().lower()
         else:
-            es_valido=str(resultado).strip().lower()
+            return str(resultado).strip().lower()
     elif field == "celular": 
         resultado = model.invoke([
             HumanMessage(
@@ -334,25 +365,13 @@ def validate_field(state):
             )
         ]).content
         if isinstance(resultado, str):
-            es_valido=resultado.strip().lower()
+            return resultado.strip().lower()
         elif isinstance(resultado,list):
-            es_valido="".join(
+            return "".join(
                 part.get("text","") if isinstance(part,dict) else str(part)
                 for part in resultado
             ).strip().lower()
         else:
-            es_valido=str(resultado).strip().lower()
+            return str(resultado).strip().lower()
     else: 
-        es_valido=True
-    
-    if es_valido == 'inválido':
-        args = state.get("tool_args",{})
-        args.pop(field,None)
-        return {
-            "tool_args":args,
-            "pending_field":field,
-            "missing_fields":[field],
-            "messages": [AIMessage(content=f"'{value}'no es un {field} válido. Porfavor ingresa un {field} válido.")]
-        }
-        
-    return {}
+        return "válido"

@@ -43,4 +43,6 @@ async def tool_node(state):
         "tool_args": {},
         "missing_fields": [],
         "pending_field": None,
+        "last_filled_field":None,
+        "validated_fields":[]
     }

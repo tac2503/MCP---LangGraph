@@ -10,4 +10,5 @@ class MessagesState(TypedDict):
     missing_fields: list[str] | None
     pending_field: str | None
     last_filled_field:str | None
+    validated_fields: list[str] | None  
         
